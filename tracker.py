@@ -2,6 +2,37 @@ import os
 import streamlit as st
 import requests
 
+
+
+
+st.markdown("---")
+st.write("🔍 [위치 추적 디버그 시작]")
+try:
+    headers = st.context.headers
+    ip_list = headers.get("X-Forwarded-For", "헤더 없음")
+    real_ip = ip_list.split(",")[0].strip() if ip_list != "헤더 없음" else None
+    
+    st.write(f"1. 낚아챈 IP: `{real_ip}`")
+    
+    # API가 거절한 이유를 알려주도록 'message' 필드를 추가했습니다.
+    url = f"http://ip-api.com/json/{real_ip}?fields=status,message,country,regionName,city,lat,lon" if real_ip else "http://ip-api.com/json/?fields=status,message,country,regionName,city,lat,lon"
+    st.write(f"2. 요청 URL: `{url}`")
+    
+    res = requests.get(url, timeout=3).json()
+    
+    if res.get("status") == "success":
+        st.success(f"3. 성공! API 응답: {res}")
+    else:
+        st.error(f"3. 실패! API 거절 사유: {res}")
+        
+except Exception as e:
+    st.error(f"❌ 파이썬 에러 발생: {e}")
+st.markdown("---")
+
+
+
+
+
 # 1. 패키지가 있는지 확인하고, 없으면 조용히 넘어갑니다.
 try:
     import requests
