@@ -19,10 +19,10 @@ def log_app_usage():
                 "app_name": "car_cost_simulator",
                 "action": "app_executed",
                 "details": {
-                    "environment": "local_windows",
-                    "version": "1.0.0",
-                    "description": "Simulator launched via web file"
-                }
+                            "environment": "local_windows",
+                            "version": "1.0.0",
+                            "description": "Simulator launched via web file"
+                            }
             }
 
             if location:

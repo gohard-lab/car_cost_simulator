@@ -1,4 +1,6 @@
 import os
+import streamlit as st
+import requests
 
 # 1. 패키지가 있는지 확인하고, 없으면 조용히 넘어갑니다.
 try:
@@ -12,6 +14,23 @@ except ImportError as e:
 
 _supabase_client = None
 
+def get_real_client_ip():
+    """Streamlit Cloud 헤더에서 실제 시청자의 IP를 추출합니다."""
+    try:
+        # Streamlit 1.37 이상 버전의 최신 기능인 st.context를 사용합니다.
+        headers = st.context.headers
+        
+        # 클라우드 환경에서는 X-Forwarded-For 헤더에 진짜 방문자 IP가 담깁니다.
+        if "X-Forwarded-For" in headers:
+            ip_list = headers.get("X-Forwarded-For")
+            # "시청자IP, 거쳐온서버IP" 형태이므로 첫 번째 값을 가져옵니다.
+            real_ip = ip_list.split(",")[0].strip()
+            return real_ip
+    except Exception:
+        pass
+    
+    return None # 로컬(내 컴퓨터) 환경이거나 IP를 못 찾은 경우
+
 def get_supabase_client():
     global _supabase_client
     if _supabase_client is None and TRACKING_ENABLED:
@@ -21,22 +40,49 @@ def get_supabase_client():
     return _supabase_client
 
 def get_location_data():
-    if not TRACKING_ENABLED:
-        return None
+    """실제 IP를 기반으로 위치 정보를 가져옵니다."""
+    real_ip = get_real_client_ip()
+    
+    # IP를 찾았으면 해당 IP를 넣고, 못 찾았으면(로컬) 빈칸으로 요청합니다.
+    base_url = f"http://ip-api.com/json/{real_ip}" if real_ip else "http://ip-api.com/json/"
+    
+    # 사용자님이 기존에 쓰시던 세부 필드(regionName 등) 옵션을 그대로 붙여줍니다.
+    req_url = f"{base_url}?fields=status,country,regionName,city,lat,lon"
+    
     try:
-        response = requests.get('http://ip-api.com/json/?fields=status,country,regionName,city,lat,lon', timeout=3)
+        response = requests.get(req_url, timeout=3)
         data = response.json()
-        if data['status'] == 'success':
+        
+        if data.get('status') == 'success':
             return {
-                'country': data['country'],
-                'region': data['regionName'],
-                'city': data['city'],
-                'lat': data['lat'],
-                'lon': data['lon']
+                'country': data.get('country'),
+                'region': data.get('regionName'),
+                'city': data.get('city'),
+                'lat': data.get('lat'),
+                'lon': data.get('lon')
             }
     except Exception:
         pass
+        
     return None
+
+# def get_location_data():
+#     if not TRACKING_ENABLED:
+#         return None
+#     try:
+#         response = requests.get('http://ip-api.com/json/?fields=status,country,regionName,city,lat,lon', timeout=3)
+#         data = response.json()
+#         if data['status'] == 'success':
+#             return {
+#                 'country': data['country'],
+#                 'region': data['regionName'],
+#                 'city': data['city'],
+#                 'lat': data['lat'],
+#                 'lon': data['lon']
+#             }
+#     except Exception:
+#         pass
+#     return None
 
 def log_app_usage(app_name: str, action: str, details: dict = None):
     # 2. 패키지가 설치되지 않은 유저라면 여기서 함수를 즉시 종료합니다.
@@ -70,4 +116,5 @@ def log_app_usage(app_name: str, action: str, details: dict = None):
         
     except Exception as e:
         # 에러가 나면 조용히 넘어가지 않고 화면에 빨간 글씨로 출력합니다!
-        print(f"🚨 [디버그] Supabase 전송 중 에러 발생: {e}")
+        # print(f"🚨 [디버그] Supabase 전송 중 에러 발생: {e}")
+        pass
