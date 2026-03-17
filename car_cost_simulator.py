@@ -43,6 +43,7 @@ def log_app_usage():
         finally:
             # 성공하든 실패하든 세션당 딱 1번만 실행되도록 플래그를 세웁니다.
             st.session_state["is_tracked"] = True
+            print("✅ [성공]")
 
 # --- 2. 숫자로 변환하는 함수 ---
 def get_number(text_value):
