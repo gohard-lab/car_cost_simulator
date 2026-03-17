@@ -12,7 +12,7 @@ except ImportError as e:
 
 _supabase_client = None
 
-def get_supabase_client()-> Client:
+def get_supabase_client():
     global _supabase_client
     if _supabase_client is None and TRACKING_ENABLED:
         supabase_url = "https://gkzbiacodysnrzbpvavm.supabase.co"
