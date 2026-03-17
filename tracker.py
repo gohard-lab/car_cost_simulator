@@ -15,26 +15,31 @@ except ImportError as e:
 _supabase_client = None
 
 def get_real_client_ip():
-    """Streamlit Cloud 헤더에서 실제 시청자의 IP를 추출합니다."""
+    """Streamlit Cloud 헤더에서 실제 시청자의 IP를 집요하게 추출합니다."""
     try:
-        # Streamlit 1.37 이상 버전의 최신 기능인 st.context를 사용합니다.
         headers = st.context.headers
         
-        # 클라우드 환경에서는 X-Forwarded-For 헤더에 진짜 방문자 IP가 담깁니다.
-        if "X-Forwarded-For" in headers:
-            ip_list = headers.get("X-Forwarded-For")
-            # "시청자IP, 거쳐온서버IP" 형태이므로 첫 번째 값을 가져옵니다.
-            real_ip = ip_list.split(",")[0].strip()
-            
-            # 🚨 핵심 추가: 공유기 내부 IP(사설 IP)나 로컬 IP인 경우 무시!
-            if real_ip.startswith(("192.168.", "10.", "172.", "127.")):
-                return None
-            
-            return real_ip
+        # 클라우드/프록시 환경에서 IP가 숨어있을 만한 모든 헤더 키 후보군을 뒤집니다.
+        proxy_keys = [
+            "X-Forwarded-For", "x-forwarded-for", 
+            "X-Real-Ip", "x-real-ip", 
+            "Client-IP", "client-ip"
+        ]
+        
+        for key in proxy_keys:
+            if key in headers:
+                ip_list = headers.get(key)
+                if ip_list:
+                    # 여러 IP가 쉼표로 연결되어 있을 수 있으므로 첫 번째 값 추출
+                    real_ip = ip_list.split(",")[0].strip()
+                    
+                    # 사설/내부망 IP(공유기 등)가 아니라면 진짜 방문자로 인정하고 즉시 반환!
+                    if not real_ip.startswith(("192.168.", "10.", "172.", "127.")):
+                        return real_ip
     except Exception:
         pass
     
-    return None # 로컬(내 컴퓨터) 환경이거나 IP를 못 찾은 경우
+    return None
 
 def get_supabase_client():
     global _supabase_client
