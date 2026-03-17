@@ -62,7 +62,7 @@ def format_comma(widget_key):
         st.session_state[widget_key] = "0"
 
 # --- 4. 웹 페이지 기본 설정 및 트래커 실행 ---
-st.set_page_config(page_title="유지비 배틀 시뮬레이터", page_icon="🚗", layout="wide")
+st.set_page_config(page_title="유지비배틀시뮬레이터", page_icon="🚗", layout="wide")
 print("✅ [시작]")
 log_app_usage() # 앱이 시작될 때 사용량 추적 함수 호출
 
