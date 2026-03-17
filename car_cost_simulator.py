@@ -10,7 +10,8 @@ def log_app_usage():
     if "is_tracked" not in st.session_state:
         try:
             # 기존에 만드신 tracker.py 모듈을 불러옵니다.
-            from tracker import get_supabase_client
+            from tracker import get_supabase_client, get_location_data
+
             supabase = get_supabase_client()
             location = get_location_data()
 
@@ -38,29 +39,11 @@ def log_app_usage():
         except Exception as e:
             # 트래커 오류가 발생하더라도 메인 시뮬레이터 앱은 멈추지 않도록 예외 처리합니다.
            st.write(f"Tracking error: {e}")
+           pass # 혹시 모를 에러에도 메인 앱은 죽지 않게 보호
         finally:
-            st.write(f"finally cheir")
+            st.write(f"finally cheiri")
             # 성공하든 실패하든 세션당 딱 1번만 실행되도록 플래그를 세웁니다.
             st.session_state["is_tracked"] = True
-
-def get_location_data():
-    if not TRACKING_ENABLED:
-        return None
-    try:
-        response = requests.get('http://ip-api.com/json/?fields=status,country,regionName,city,lat,lon', timeout=3)
-        data = response.json()
-        if data['status'] == 'success':
-            return {
-                'country': data['country'],
-                'region': data['regionName'],
-                'city': data['city'],
-                'lat': data['lat'],
-                'lon': data['lon']
-            }
-    except Exception as e:
-        # pass
-        st.write(f"get_location_data error: {e}")
-    return None
 
 # --- 2. 숫자로 변환하는 함수 ---
 def get_number(text_value):
