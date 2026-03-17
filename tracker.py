@@ -15,30 +15,16 @@ except ImportError as e:
 _supabase_client = None
 
 def get_real_client_ip():
-    """Streamlit Cloud 헤더에서 실제 시청자의 IP를 집요하게 추출합니다."""
+    """브라우저(프론트엔드) 단에서 실제 공인 IP를 직접 가져옵니다."""
     try:
-        headers = st.context.headers
+        # 브라우저가 직접 외부 API(ipify)에 자신의 공인 IP를 물어보게 JS를 실행합니다.
+        client_ip = st_javascript("await (await fetch('https://api.ipify.org?format=json')).json().then(data => data.ip)")
         
-        # 클라우드/프록시 환경에서 IP가 숨어있을 만한 모든 헤더 키 후보군을 뒤집니다.
-        proxy_keys = [
-            "X-Forwarded-For", "x-forwarded-for", 
-            "X-Real-Ip", "x-real-ip", 
-            "Client-IP", "client-ip"
-        ]
-        
-        for key in proxy_keys:
-            if key in headers:
-                ip_list = headers.get(key)
-                if ip_list:
-                    # 여러 IP가 쉼표로 연결되어 있을 수 있으므로 첫 번째 값 추출
-                    real_ip = ip_list.split(",")[0].strip()
-                    
-                    # 사설/내부망 IP(공유기 등)가 아니라면 진짜 방문자로 인정하고 즉시 반환!
-                    if not real_ip.startswith(("192.168.", "10.", "172.", "127.")):
-                        return real_ip
+        # 정상적인 IP 문자열을 받아왔을 때만 반환
+        if client_ip and isinstance(client_ip, str) and "." in client_ip:
+            return client_ip
     except Exception:
         pass
-    
     return None
 
 def get_supabase_client():
@@ -53,20 +39,16 @@ def get_location_data():
     """실제 IP를 기반으로 위치 정보를 가져옵니다."""
     real_ip = get_real_client_ip()
     
-    # IP를 찾았으면 해당 IP를 넣고, 못 찾았으면(로컬) 빈칸으로 요청합니다.
-    # base_url = f"http://ip-api.com/json/{real_ip}" if real_ip else "http://ip-api.com/json/"
-    
-    # 사설 IP라 None이 반환되었다면, 알아서 공인 IP를 찾도록 주소를 비워서 보냅니다.
-    url = f"http://ip-api.com/json/{real_ip}" if real_ip else "http://ip-api.com/json/"
-    req_url = f"{url}?fields=status,country,regionName,city,lat,lon"
+    # 🌟 핵심: IP를 못 찾았다면, 댈러스가 찍히는 것을 막기 위해 추적을 포기(None)합니다.
+    if not real_ip:
+        return None 
 
-    # 사용자님이 기존에 쓰시던 세부 필드(regionName 등) 옵션을 그대로 붙여줍니다.
-    #  req_url = f"{base_url}?fields=status,country,regionName,city,lat,lon"
+    # 진짜 IP를 찾았을 때만 해당 위치를 묻습니다.
+    url = f"http://ip-api.com/json/{real_ip}?fields=status,country,regionName,city,lat,lon"
     
     try:
-        response = requests.get(req_url, timeout=3)
+        response = requests.get(url, timeout=3)
         data = response.json()
-        
         if data.get('status') == 'success':
             return {
                 'country': data.get('country'),
@@ -77,7 +59,6 @@ def get_location_data():
             }
     except Exception:
         pass
-        
     return None
 
 # def get_location_data():

@@ -1,0 +1,12 @@
+[project]
+name = "car-cost-simulator"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.32.5",
+    "streamlit>=1.55.0",
+    "streamlit-javascript>=0.1.5",
+    "supabase>=2.28.2",
+]
