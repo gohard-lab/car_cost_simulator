@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
+import requests
+
+TRACKING_ENABLED = True
 
 # --- 1. [추가] Supabase 사용량 추적 로직 (DB 트래픽 방어 적용) ---
 def log_app_usage():
@@ -9,7 +12,8 @@ def log_app_usage():
             # 기존에 만드신 tracker.py 모듈을 불러옵니다.
             from tracker import get_supabase_client
             supabase = get_supabase_client()
-            
+            location = get_location_data()
+
             log_data = {
                 "app_name": "car_cost_simulator",
                 "action": "app_executed",
@@ -19,6 +23,16 @@ def log_app_usage():
                     "description": "Simulator launched via web file"
                 }
             }
+
+            if location:
+                log_data.update({
+                    'country': location['country'],
+                    'region': location['region'],
+                    'city': location['city'],
+                    'lat': location['lat'],
+                    'lon': location['lon']
+                })
+
             # returning='minimal'을 사용하여 RLS(읽기 금지) 충돌을 방지합니다.
             supabase.table('usage_logs').insert(log_data, returning='minimal').execute()
         except Exception as e:
@@ -27,6 +41,24 @@ def log_app_usage():
         finally:
             # 성공하든 실패하든 세션당 딱 1번만 실행되도록 플래그를 세웁니다.
             st.session_state["is_tracked"] = True
+
+def get_location_data():
+    if not TRACKING_ENABLED:
+        return None
+    try:
+        response = requests.get('http://ip-api.com/json/?fields=status,country,regionName,city,lat,lon', timeout=3)
+        data = response.json()
+        if data['status'] == 'success':
+            return {
+                'country': data['country'],
+                'region': data['regionName'],
+                'city': data['city'],
+                'lat': data['lat'],
+                'lon': data['lon']
+            }
+    except Exception:
+        pass
+    return None
 
 # --- 2. 숫자로 변환하는 함수 ---
 def get_number(text_value):
