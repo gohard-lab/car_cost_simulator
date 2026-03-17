@@ -3,6 +3,24 @@ import pandas as pd
 import altair as alt
 import requests
 
+
+
+
+st.markdown("---")
+st.write("🔍 [디버그] Streamlit이 보내는 모든 헤더(이름표) 까보기")
+
+# 서버가 가지고 있는 모든 헤더 정보를 JSON 형태로 화면에 낱낱이 출력합니다.
+try:
+    headers_dict = dict(st.context.headers)
+    st.json(headers_dict)
+except Exception as e:
+    st.error(f"헤더를 읽는 중 에러 발생: {e}")
+    
+st.stop() # 🚨 밑에 있는 진짜 앱 코드는 실행되지 않도록 여기서 딱 멈춥니다!
+
+
+
+
 TRACKING_ENABLED = True
 
 # --- 1. [추가] Supabase 사용량 추적 로직 (DB 트래픽 방어 적용) ---
