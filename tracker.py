@@ -2,37 +2,6 @@ import os
 import streamlit as st
 import requests
 
-
-
-
-st.markdown("---")
-st.write("🔍 [위치 추적 디버그 시작]")
-try:
-    headers = st.context.headers
-    ip_list = headers.get("X-Forwarded-For", "헤더 없음")
-    real_ip = ip_list.split(",")[0].strip() if ip_list != "헤더 없음" else None
-    
-    st.write(f"1. 낚아챈 IP: `{real_ip}`")
-    
-    # API가 거절한 이유를 알려주도록 'message' 필드를 추가했습니다.
-    url = f"http://ip-api.com/json/{real_ip}?fields=status,message,country,regionName,city,lat,lon" if real_ip else "http://ip-api.com/json/?fields=status,message,country,regionName,city,lat,lon"
-    st.write(f"2. 요청 URL: `{url}`")
-    
-    res = requests.get(url, timeout=3).json()
-    
-    if res.get("status") == "success":
-        st.success(f"3. 성공! API 응답: {res}")
-    else:
-        st.error(f"3. 실패! API 거절 사유: {res}")
-        
-except Exception as e:
-    st.error(f"❌ 파이썬 에러 발생: {e}")
-st.markdown("---")
-
-
-
-
-
 # 1. 패키지가 있는지 확인하고, 없으면 조용히 넘어갑니다.
 try:
     import requests
@@ -56,6 +25,11 @@ def get_real_client_ip():
             ip_list = headers.get("X-Forwarded-For")
             # "시청자IP, 거쳐온서버IP" 형태이므로 첫 번째 값을 가져옵니다.
             real_ip = ip_list.split(",")[0].strip()
+            
+            # 🚨 핵심 추가: 공유기 내부 IP(사설 IP)나 로컬 IP인 경우 무시!
+            if real_ip.startswith(("192.168.", "10.", "172.", "127.")):
+                return None
+            
             return real_ip
     except Exception:
         pass
@@ -75,10 +49,14 @@ def get_location_data():
     real_ip = get_real_client_ip()
     
     # IP를 찾았으면 해당 IP를 넣고, 못 찾았으면(로컬) 빈칸으로 요청합니다.
-    base_url = f"http://ip-api.com/json/{real_ip}" if real_ip else "http://ip-api.com/json/"
+    # base_url = f"http://ip-api.com/json/{real_ip}" if real_ip else "http://ip-api.com/json/"
     
+    # 사설 IP라 None이 반환되었다면, 알아서 공인 IP를 찾도록 주소를 비워서 보냅니다.
+    url = f"http://ip-api.com/json/{real_ip}" if real_ip else "http://ip-api.com/json/"
+    req_url = f"{url}?fields=status,country,regionName,city,lat,lon"
+
     # 사용자님이 기존에 쓰시던 세부 필드(regionName 등) 옵션을 그대로 붙여줍니다.
-    req_url = f"{base_url}?fields=status,country,regionName,city,lat,lon"
+    #  req_url = f"{base_url}?fields=status,country,regionName,city,lat,lon"
     
     try:
         response = requests.get(req_url, timeout=3)
