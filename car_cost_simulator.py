@@ -11,9 +11,13 @@ def log_app_usage():
             supabase = get_supabase_client()
             
             log_data = {
-                "app_name": "유지비_배틀_시뮬레이터",
-                "action": "앱_접속",
-                "details": "시뮬레이터 초기 화면 로드"
+                "app_name": "tesla_vision_simulator",
+                "action": "app_executed",
+                "details": {
+                    "environment": "local_windows",
+                    "version": "1.0.0",
+                    "description": "Simulator launched via web file"
+                }
             }
             # returning='minimal'을 사용하여 RLS(읽기 금지) 충돌을 방지합니다.
             supabase.table('usage_logs').insert(log_data, returning='minimal').execute()
