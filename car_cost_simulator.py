@@ -11,7 +11,7 @@ def log_app_usage():
             supabase = get_supabase_client()
             
             log_data = {
-                "app_name": "tesla_vision_simulator",
+                "app_name": "car_cost_simulator",
                 "action": "app_executed",
                 "details": {
                     "environment": "local_windows",
