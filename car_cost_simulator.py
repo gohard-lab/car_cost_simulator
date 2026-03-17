@@ -62,11 +62,11 @@ def format_comma(widget_key):
         st.session_state[widget_key] = "0"
 
 # --- 4. 웹 페이지 기본 설정 및 트래커 실행 ---
-st.set_page_config(page_title="유지비배틀시뮬레이터", page_icon="🚗", layout="wide")
-print("✅ [시작]")
+st.set_page_config(page_title="유지비 배틀 시뮬레이터", page_icon="🚗", layout="wide")
 log_app_usage() # 앱이 시작될 때 사용량 추적 함수 호출
 
 st.title("🚗 내 차 vs 네 차! 1년 유지비 배틀 시뮬레이터")
+print("✅ [시작]")
 st.markdown("---")
 
 # --- 5. 사이드바: 기름값 세팅 (초기값 세팅 및 콜백 연결) ---
