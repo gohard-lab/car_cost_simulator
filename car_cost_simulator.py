@@ -37,8 +37,9 @@ def log_app_usage():
             supabase.table('usage_logs').insert(log_data, returning='minimal').execute()
         except Exception as e:
             # 트래커 오류가 발생하더라도 메인 시뮬레이터 앱은 멈추지 않도록 예외 처리합니다.
-            print(f"Tracking error: {e}")
+           print(f"Tracking error: {e}")
         finally:
+            print(f"finally cheir")
             # 성공하든 실패하든 세션당 딱 1번만 실행되도록 플래그를 세웁니다.
             st.session_state["is_tracked"] = True
 
@@ -56,8 +57,9 @@ def get_location_data():
                 'lat': data['lat'],
                 'lon': data['lon']
             }
-    except Exception:
-        pass
+    except Exception as e:
+        # pass
+        print(f"get_location_data error: {e}")
     return None
 
 # --- 2. 숫자로 변환하는 함수 ---
