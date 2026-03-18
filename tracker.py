@@ -90,27 +90,24 @@ def get_location_data():
 
 # def log_app_usage(app_name, action="page_view"):
 def log_app_usage(app_name="unknown_app", action="page_view"):
-    """Supabase에 사용자 활동과 정확한 한국 시간을 기록합니다."""
+    """Supabase에 사용자 활동을 기록하고 성공 여부를 반환합니다."""
     loc_data = get_location_data()
     
+    # 🚨 로딩 중이면 아직 도장 찍지 말라고 False를 반환합니다.
     if loc_data == "LOADING":
-        return 
+        return False 
         
     try:
         client = get_supabase_client()
         if not client:
-            return
+            return False
             
-        # 🚨 핵심: 국제 표준시(UTC)에 9시간을 더해 완벽한 한국 표준시(KST) 만들기
         kst = timezone(timedelta(hours=9))
-        # korea_time = datetime.now(kst).isoformat()
         korea_time = datetime.now(kst).strftime("%Y-%m-%d %H:%M:%S")
-
         
         log_data = {
             "app_name": app_name,
             "action": action,
-            # 💡 만약 Supabase DB의 시간 컬럼 이름이 'created_at' 이라면 아래 키값을 "created_at"으로 바꿔주세요!
             "timestamp": korea_time, 
             "country": loc_data['country'] if loc_data else "Unknown",
             "region": loc_data['region'] if loc_data else "Unknown",
@@ -120,8 +117,11 @@ def log_app_usage(app_name="unknown_app", action="page_view"):
         }
         
         client.table('usage_logs').insert(log_data, returning='minimal').execute()
+        
+        return True # 🚨 성공적으로 기록했으니 도장 찍으라고 True를 반환합니다.
+        
     except Exception as e:
-        pass
+        return True # (에러가 나서 실패하더라도 무한 반복을 막기 위해 True 처리)
 
 
 # def log_app_usage(app_name: str, action: str, details: dict = None):

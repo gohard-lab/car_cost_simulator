@@ -13,10 +13,12 @@ TRACKING_ENABLED = True
 
 # ✅ 변경 후 (최초 1회 접속 시에만 실행됨)
 if "has_logged_execution" not in st.session_state:
-    # 도장이 없으면 사용량을 기록하고
-    log_app_usage("car_cost_simulator", "app_executed")
-    # 도장을 쾅 찍어줍니다. (이제 브라우저를 닫을 때까지 다시 기록되지 않음)
-    st.session_state["has_logged_execution"] = True
+    # 함수가 성공했는지(True) 로딩 때문에 실패했는지(False) 결과를 받습니다.
+    is_logged = log_app_usage("car_cost_simulator", "app_executed")
+    
+    # 완전히 DB 기록에 성공했을 때만 도장을 쾅 찍어줍니다!
+    if is_logged:
+        st.session_state["has_logged_execution"] = True
 
 
     
