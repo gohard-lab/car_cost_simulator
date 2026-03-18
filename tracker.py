@@ -103,7 +103,9 @@ def log_app_usage(app_name="unknown_app", action="page_view"):
             
         # 🚨 핵심: 국제 표준시(UTC)에 9시간을 더해 완벽한 한국 표준시(KST) 만들기
         kst = timezone(timedelta(hours=9))
-        korea_time = datetime.now(kst).isoformat()
+        # korea_time = datetime.now(kst).isoformat()
+        korea_time = datetime.now(kst).strftime("%Y-%m-%d %H:%M:%S")
+
         
         log_data = {
             "app_name": app_name,
