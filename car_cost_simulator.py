@@ -7,6 +7,19 @@ from tracker import log_app_usage
 
 TRACKING_ENABLED = True
 
+
+# 🚨 변경 전 (사용자가 화면을 만질 때마다 계속 실행됨)
+# log_app_usage("car_cost_simulator", "app_executed")
+
+# ✅ 변경 후 (최초 1회 접속 시에만 실행됨)
+if "has_logged_execution" not in st.session_state:
+    # 도장이 없으면 사용량을 기록하고
+    log_app_usage("car_cost_simulator", "app_executed")
+    # 도장을 쾅 찍어줍니다. (이제 브라우저를 닫을 때까지 다시 기록되지 않음)
+    st.session_state["has_logged_execution"] = True
+
+
+    
 # --- 1. [추가] Supabase 사용량 추적 로직 (DB 트래픽 방어 적용) ---
 # def log_app_usage():
 #     if "is_tracked" not in st.session_state:
@@ -65,7 +78,6 @@ def format_comma(widget_key):
 
 # --- 4. 웹 페이지 기본 설정 및 트래커 실행 ---
 st.set_page_config(page_title="유지비 배틀 시뮬레이터", page_icon="🚗", layout="wide")
-log_app_usage("car_cost_simulator", "app_executed") # 앱이 시작될 때 사용량 추적 함수 호출
 
 st.title("🚗 내 차 vs 네 차! 1년 유지비 배틀 시뮬레이터")
 st.markdown("---")
