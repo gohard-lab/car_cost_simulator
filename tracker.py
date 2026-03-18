@@ -4,6 +4,9 @@ import requests
 from supabase import create_client
 from streamlit_javascript import st_javascript
 
+# 🚨 시간 계산을 위한 파이썬 기본 모듈
+from datetime import datetime, timezone, timedelta
+
 # 1. 패키지가 있는지 확인하고, 없으면 조용히 넘어갑니다.
 # try:
 #     import requests
@@ -86,12 +89,10 @@ def get_location_data():
 #     return None
 
 # def log_app_usage(app_name, action="page_view"):
-def log_app_usage(app_name: str, action: str, details: dict = None):
-    """Supabase에 사용자 활동을 기록합니다."""
+def log_app_usage(app_name="unknown_app", action="page_view"):
+    """Supabase에 사용자 활동과 정확한 한국 시간을 기록합니다."""
     loc_data = get_location_data()
     
-    # 🚨 신호 처리 2: 자바스크립트가 아직 로딩 중이라면, DB에 기록하지 않고 조용히 함수를 종료합니다!
-    # (0.5초 뒤에 JS가 진짜 IP를 가져오면 Streamlit이 자동으로 재실행하면서 정상 기록됩니다.)
     if loc_data == "LOADING":
         return 
         
@@ -100,10 +101,15 @@ def log_app_usage(app_name: str, action: str, details: dict = None):
         if not client:
             return
             
+        # 🚨 핵심: 국제 표준시(UTC)에 9시간을 더해 완벽한 한국 표준시(KST) 만들기
+        kst = timezone(timedelta(hours=9))
+        korea_time = datetime.now(kst).isoformat()
+        
         log_data = {
             "app_name": app_name,
             "action": action,
-            # 로딩이 끝났는데도 못 찾았다면(None) 빈 값으로 세팅, 찾았다면(dict) 해당 값 세팅
+            # 💡 만약 Supabase DB의 시간 컬럼 이름이 'created_at' 이라면 아래 키값을 "created_at"으로 바꿔주세요!
+            "timestamp": korea_time, 
             "country": loc_data['country'] if loc_data else "Unknown",
             "region": loc_data['region'] if loc_data else "Unknown",
             "city": loc_data['city'] if loc_data else "Unknown",
@@ -113,8 +119,7 @@ def log_app_usage(app_name: str, action: str, details: dict = None):
         
         client.table('usage_logs').insert(log_data, returning='minimal').execute()
     except Exception as e:
-        pass # 에러가 나도 앱은 멈추지 않게 조용히 넘어갑니다.
-
+        pass
 
 
 # def log_app_usage(app_name: str, action: str, details: dict = None):
