@@ -65,7 +65,7 @@ def format_comma(widget_key):
 
 # --- 4. 웹 페이지 기본 설정 및 트래커 실행 ---
 st.set_page_config(page_title="유지비 배틀 시뮬레이터", page_icon="🚗", layout="wide")
-log_app_usage("car_cost_simulator", "page_view") # 앱이 시작될 때 사용량 추적 함수 호출
+log_app_usage("car_cost_simulator", "app_executed") # 앱이 시작될 때 사용량 추적 함수 호출
 
 st.title("🚗 내 차 vs 네 차! 1년 유지비 배틀 시뮬레이터")
 st.markdown("---")
