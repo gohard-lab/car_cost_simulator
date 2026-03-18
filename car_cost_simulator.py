@@ -3,7 +3,7 @@ import pandas as pd
 import altair as alt
 import requests
 
-from tracker import log_app_usage
+from tracker_web import log_app_usage
 
 TRACKING_ENABLED = True
 
