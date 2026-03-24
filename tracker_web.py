@@ -1,6 +1,7 @@
 import os
 import streamlit as st
 import requests
+import uuid
 from supabase import create_client
 from streamlit_javascript import st_javascript
 
@@ -88,8 +89,15 @@ def get_location_data():
 #         pass
 #     return None
 
+# 1. 💡 세션 ID를 발급/조회하는 함수 추가 (log_app_usage 함수 위쪽에 배치)
+def get_or_create_session_id():
+    if 'session_id' not in st.session_state:
+        # 접속 시 최초 1회만 고유 ID 생성 (예: 'a1b2c3d4...')
+        st.session_state['session_id'] = uuid.uuid4().hex
+    return st.session_state['session_id']
+
 # def log_app_usage(app_name, action="page_view"):
-def log_app_usage(app_name="unknown_app", action="page_view"):
+def log_app_usage(app_name="unknown_app", action="page_view", details=None):
     """Supabase에 사용자 활동을 기록하고 성공 여부를 반환합니다."""
     loc_data = get_location_data()
     
@@ -102,10 +110,14 @@ def log_app_usage(app_name="unknown_app", action="page_view"):
         if not client:
             return False
             
+        # 세션 ID 가져오기
+        current_session = get_or_create_session_id()
+
         kst = timezone(timedelta(hours=9))
         korea_time = datetime.now(kst).strftime("%Y-%m-%d %H:%M:%S")
         
         log_data = {
+            "session_id": current_session,
             "app_name": app_name,
             "action": action,
             "timestamp": korea_time, 
@@ -113,7 +125,8 @@ def log_app_usage(app_name="unknown_app", action="page_view"):
             "region": loc_data['region'] if loc_data else "Unknown",
             "city": loc_data['city'] if loc_data else "Unknown",
             "lat": loc_data['lat'] if loc_data else 0.0,
-            "lon": loc_data['lon'] if loc_data else 0.0
+            "lon": loc_data['lon'] if loc_data else 0.0,
+            "details" : details
         }
         
         client.table('usage_logs').insert(log_data, returning='minimal').execute()
