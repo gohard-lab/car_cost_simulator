@@ -8,11 +8,27 @@ from tracker_web import log_app_usage
 TRACKING_ENABLED = True
 
 
+@st.dialog("⭐ Support Polymath Developer Automation Tool")
+def show_star_popup_web():
+    # 팝업 노출 트래커 기록
+    log_app_usage("simple_button_app", "star_prompt_displayed", details={"ui": "streamlit_dialog"})
+    
+    st.warning(
+        "💡 유용하게 사용하셨나요? 소스코드만 날름 가져가는 분들이 많습니다. "
+        "개발자의 땀과 노력에 대한 최소한의 예의로 깃허브 Star⭐를 부탁드립니다!\n\n"
+        "Did you find this useful? Please show some basic courtesy for the developer's hard work by leaving a GitHub Star⭐."
+    )
+    
+    # 깃허브 Star 유도 버튼
+    st.link_button("👉 깃허브로 이동하여 Star 누르기", "https://github.com/gohard-lab/car_cost_simulator")
+
+
 # 🚨 변경 전 (사용자가 화면을 만질 때마다 계속 실행됨)
 # log_app_usage("car_cost_simulator", "app_executed")
 
 # ✅ 변경 후 (최초 1회 접속 시에만 실행됨)
 if "has_logged_execution" not in st.session_state:
+    show_star_popup_web()
     # 함수가 성공했는지(True) 로딩 때문에 실패했는지(False) 결과를 받습니다.
     is_logged = log_app_usage("car_cost_simulator", "simulator_opened")
     
@@ -182,3 +198,4 @@ with col3:
     st.metric(label=f"🔴 {차량1_이름}", value=f"{차량1_총유지비:,} 원", delta=f"순수 기름값: {차량1_기름값:,} 원", delta_color="off")
 with col4:
     st.metric(label=f"🔵 {차량2_이름}", value=f"{차량2_총유지비:,} 원", delta=f"순수 기름값: {차량2_기름값:,} 원", delta_color="off")
+
