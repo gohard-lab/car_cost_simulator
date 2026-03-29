@@ -11,7 +11,7 @@ TRACKING_ENABLED = True
 @st.dialog("⭐ Support Polymath Developer Automation Tool")
 def show_star_popup_web():
     # 팝업 노출 트래커 기록
-    log_app_usage("simple_button_app", "star_prompt_displayed", details={"ui": "streamlit_dialog"})
+    log_app_usage("Kcar_crawler", "star_prompt_displayed", details={"ui": "streamlit_dialog"})
     
     st.warning(
         "💡 유용하게 사용하셨나요? 소스코드만 날름 가져가는 분들이 많습니다. "
