@@ -1,0 +1,6 @@
+[server]
+# 브라우저와 서버가 서로 살아있는지 확인하는 핑(Ping) 주기를 짧게 설정합니다. (단위: 초)
+# 기본값은 길게 설정되어 있어 클라우드에서 끊길 수 있으므로, 30초마다 생존 신고를 하도록 강제합니다.
+# usage_logs에 데이터 안쌓임
+websocketPingInterval = 30
+websocketPingTimeout = 120
