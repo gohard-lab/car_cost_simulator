@@ -6,22 +6,18 @@ import sys  # 💡 sys 모듈 누락 수정
 from supabase import create_client, Client
 from streamlit_javascript import st_javascript
 from datetime import datetime, timezone
-from dotenv import load_dotenv
 
-
-def resource_path(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
-
-load_dotenv(resource_path('.env'))
 
 @st.cache_resource
 def get_supabase_client():
-    url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_KEY")
+    try:
+        # 🌟 수정 후 (로컬: secrets.toml / 배포: Cloud Secrets 탭에서 자동 인식)
+        url = st.secrets["supabase"]["url"]
+        key = st.secrets["supabase"]["key"]
+    except KeyError:
+        # 설정 파일이나 클라우드 세팅이 누락되었을 때 부드럽게 에러 안내
+        st.error("🚨 데이터베이스 연결 설정(secrets)이 누락되었습니다!")
+        return None
 
     if not url or not key:
         return None
@@ -114,7 +110,6 @@ def log_app_usage(app_name="unknown_app", action="page_view", details=None):
         
         client.table('usage_logs').insert(log_data, returning='minimal').execute()
         return True
-    
     except Exception as e:
         print(f"🚨 트래커 에러: {e}")
         return False
