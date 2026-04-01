@@ -98,17 +98,23 @@ def log_app_usage(app_name="unknown_app", action="page_view", details=None):
         }
 
         # ==========================================================
-        # 🚨 [유령 봇 차단] 기기 정보나 IP가 없는 접근은 로그를 남기지 않고 즉시 종료!
+        # 🚨 [스마트 봇 차단] 정상적인 유저는 통과시키고 헬스체크 핑만 차단
         # ==========================================================
-        if not user_agent or user_agent == "Unknown" or "bot" in user_agent.lower():
+        
+        # 1. 이름에 대놓고 'bot', 'uptime', 'cron' 등이 들어간 기계는 즉시 차단
+        if user_agent and any(keyword in user_agent.lower() for keyword in ["bot", "uptime", "cron"]):
             return False
             
-        if not real_ip or real_ip == "Unknown":
+        # 2. 기기 정보(User-Agent)와 IP 주소가 "둘 다" Unknown일 때만 헬스체크 핑으로 간주하고 차단
+        # (스트림릿 버전 차이로 하나만 Unknown이 뜨는 정상 유저는 통과시켜 줍니다)
+        if user_agent == "Unknown" and real_ip == "Unknown":
             return False
+        
         # ==========================================================
         
         client.table('usage_logs').insert(log_data, returning='minimal').execute()
         return True
+    
     except Exception as e:
         print(f"🚨 트래커 에러: {e}")
         return False
