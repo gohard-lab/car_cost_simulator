@@ -57,7 +57,7 @@ def log_app_usage(app_name="unknown_app", action="page_view", details=None):
     
     # IP가 아직 로딩 중이면 로그 기록을 일단 건너뜁니다 (화면 멈춤 방지)
     if not real_ip:
-        return False
+        real_ip = "Pending"
 
     try:
         client = get_supabase_client()
@@ -65,7 +65,7 @@ def log_app_usage(app_name="unknown_app", action="page_view", details=None):
             return False
 
         loc_data = {}
-        if real_ip not in ["Unknown"]:
+        if real_ip not in ["Unknown", "Pending"]:
             try:
                 res = requests.get(f"http://ip-api.com/json/{real_ip}?fields=status,country,regionName,city,lat,lon", timeout=1)
                 loc_data = res.json() if res.status_code == 200 else {}
