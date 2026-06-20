@@ -64,14 +64,16 @@ def log_app_usage(app_name="unknown_app", action="page_view", details=None):
     # ==========================================================
     # 🚨 [SMART BOT SHIELD] Block GitHub Actions, curl, and automated pings immediately
     # ==========================================================
-    if user_agent and any(keyword in user_agent.lower() for keyword in ["github", "curl", "wget", "bot", "uptime", "cron"]):
+    if user_agent and any(keyword in user_agent.lower() for keyword in ["github", "curl", "wget", "bot", "uptime", "cron", "polymath"]):
         return False
     # ==========================================================
 
     real_ip = get_real_client_ip()
-    if not real_ip:
-        real_ip = "Pending"
 
+    # 🔥 [CRITICAL FIX] Immediately drop headless ping requests that fail JavaScript evaluation
+    if not real_ip or real_ip in ["Pending", "Unknown"]:
+        return False
+    
     # ==========================================================
     # 🚨 Secondary Shield: Block if both identification metrics fail
     # ==========================================================
