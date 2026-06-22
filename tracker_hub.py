@@ -8,6 +8,15 @@ from streamlit_javascript import st_javascript
 from datetime import datetime, timezone
 
 
+# 💡 [SMART PATCH] Prevent crash in pure backend environments where streamlit is missing
+try:
+    import streamlit as st
+    from streamlit_javascript import st_javascript
+except ModuleNotFoundError:
+    st = None
+    st_javascript = None
+
+
 @st.cache_resource
 def get_supabase_client():
     try:
@@ -24,6 +33,10 @@ def get_supabase_client():
 
 
 def get_real_client_ip():
+    # Return immediately if running in a non-streamlit environment
+    if st is None:
+        return "Unknown"
+    
     """Extract real client IP prioritizing Streamlit context headers to minimize 'Unknown' location metrics."""
     # 1. Try extracting from X-Forwarded-For header (Streamlit Cloud Proxy environment)
     if hasattr(st, "context") and st.context.headers:
@@ -60,25 +73,28 @@ def get_or_create_session_id():
 def log_app_usage(app_name="unknown_app", action="page_view", details=None):
     """Log user activities to Supabase database while filtering out automated bot activities."""
     user_agent = st.context.headers.get("User-Agent", "Unknown") if hasattr(st, "context") else "Unknown"
+    ua_str = str(user_agent).lower() if user_agent else ""
     
-    # ==========================================================
-    # 🚨 [SMART BOT SHIELD] Block GitHub Actions, curl, and automated pings immediately
-    # ==========================================================
-    if user_agent and any(keyword in user_agent.lower() for keyword in ["github", "curl", "wget", "bot", "uptime", "cron", "polymath"]):
+    # =================================================================
+    # 🛡️ [ABSOLUTE GATEKEEPER] Block infrastructure bots instantly before DB hit
+    # =================================================================
+    # 1. Block standard automated scrapers, keep-alive runners, and Streamlit prerender bots
+    bot_keywords = ["github", "curl", "wget", "bot", "uptime", "cron", "polymath", "prerender", "headlesschrome"]
+    if any(k in ua_str for k in bot_keywords):
         return False
-    # ==========================================================
+
+    # 2. Block the specific legacy system checker ('Chrome/124.0.0.0') discovered in export analysis
+    if "chrome/124.0.0.0" in ua_str:
+        return False
 
     real_ip = get_real_client_ip()
 
-    # 🔥 [CRITICAL FIX] Immediately drop headless ping requests that fail JavaScript evaluation
-    if not real_ip or real_ip in ["Pending", "Unknown"]:
+    # 3. 🚨 [CRITICAL WHALE BROWSER FIX] Drop strictly ONLY when both IP and UA are totally 'Unknown'.
+    # DO NOT drop 'Pending' IP here! Real human viewers (e.g. Naver Whale) temporarily hold 
+    # 'Pending' status during the initial async JavaScript IP resolution handshakes.
+    if (real_ip == "Unknown" or not real_ip) and (user_agent == "Unknown"):
         return False
-    
-    # ==========================================================
-    # 🚨 Secondary Shield: Block if both identification metrics fail
-    # ==========================================================
-    if user_agent == "Unknown" and real_ip == "Unknown":
-        return False
+    # =================================================================
 
     try:
         client = get_supabase_client()
