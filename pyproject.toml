@@ -9,4 +9,8 @@ dependencies = [
     "streamlit>=1.55.0",
     "streamlit-javascript>=0.1.5",
     "supabase>=2.28.2",
+    "tracker_hub",
 ]
+
+[tool.uv.sources]
+tracker_hub = { git = "https://github.com/gohard-lab/tracker-hub.git" }
